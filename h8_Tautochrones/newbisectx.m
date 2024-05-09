@@ -3,7 +3,7 @@ function [r, resarray] = bisect(f, a, b, tol, maxiter)
     resarray = zeros(1, maxiter);
     r = NaN; % Initialize r to NaN to handle the case where no root is found within tolerance
 
-    % Check if we already have a root at the boundaries
+    % Check if we already have a root at the boundaries (points a and b)
     if abs(f(a)) < tol
         r = a;
         resarray = f(a);

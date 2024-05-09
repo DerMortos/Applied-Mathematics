@@ -39,5 +39,6 @@ R = 2; % Radius in meters
     ylabel('Hang Time (seconds)');
     title('Time to Reach the Bottom of the Cycloidal Arc');
     grid on;
+end
 
-
+find_hang_time()

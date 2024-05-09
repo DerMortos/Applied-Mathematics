@@ -1,40 +1,55 @@
 function [r, resarray] = bisect(f, a, b, tol, maxiter)
+    % Bisection method to find the root of a function
     k = 0;
     resarray = zeros(1, maxiter);
     r = NaN; % Initialize r to NaN to handle the case where no root is found within tolerance
 
-    % Check if we already have a root at the boundaries
-    if abs(f(a)) < tol
+    fa = f(a);
+    fb = f(b);
+
+    % Check if the function at point 'a' or 'b' is already close to zero
+    if abs(fa) < tol
         r = a;
-        resarray(1) = f(a);
-        resarray = resarray(1:k); % Truncate the array
+        resarray(1) = fa;
         return;
-    elseif abs(f(b)) < tol
+    elseif abs(fb) < tol
         r = b;
-        resarray(1) = f(b);
-        resarray = resarray(1:k); % Truncate the array
+        resarray(1) = fb;
         return;
     end
 
-    while abs(b - a) > tol && k < maxiter
-        x = (a + b) / 2;
-        resarray(k+1) = abs(f(x));
+    % Check if the function changes sign over the interval [a, b]
+    if fa * fb > 0
+        error('Function does not change sign over the interval. Bisection method cannot proceed.');
+    end
 
-        if f(a) * f(x) <= 0
-            b = x;
-        else
-            a = x;
+    % Main loop of the bisection algorithm
+    while k < maxiter
+        k = k + 1;
+        r = (a + b) / 2; % Midpoint
+        fr = f(r);
+        resarray(k) = abs(fr);
+
+        if abs(fr) < tol
+            % The root has been found to within the specified tolerance
+            resarray = resarray(1:k); % Truncate the residual array
+            return;
         end
 
-        k = k + 1;
-        r = x; % Use the midpoint as the root approximation
+        if fa * fr < 0
+            b = r; % The root is in the left subinterval
+            fb = fr;
+        else
+            a = r; % The root is in the right subinterval
+            fa = fr;
+        end
     end
 
-    if k == maxiter && abs(f(x)) > tol
-        fprintf('Maximum iterations reached. Root not found to the desired tolerance.\n');
+    % If the loop exited without finding a root to within the tolerance,
+    % warn the user and return the last midpoint as the root approximation
+    if abs(fr) > tol
+        warning('Maximum iterations reached without finding a root to the desired tolerance.');
     end
 
-    % Resize resarray to include only the elements up to the k-th
-    resarray = resarray(1:k);
+    resarray = resarray(1:k); % Truncate the residual array
 end
-
