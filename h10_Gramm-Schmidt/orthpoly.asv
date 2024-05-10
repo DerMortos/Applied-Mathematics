@@ -1,0 +1,75 @@
+function C = orthpoly(N,a,b)
+    C = cell(N+1,1);        % initialize cell array to store polynomials
+    
+    C{1} = 1/sqrt(b-a);     %first entry of cellular array (constant)
+    for k = 1:N
+        rho = 0;            % initialize the polynomial to be orthogonalized
+        for j = 0:k-1
+            c =polyip([1 zeros(1,k)],C{j+1},a,b); %first entry, second entry
+            
+            rho = polyadd(rho,c * C{j+1});
+        end
+
+    omega = polyadd([1 zeros(1,k)],-rho);           % create a polynomial of degree k      
+    C{k+1} = omega/sqrt(polyip(omega,omega,a,b));   % normalize polynomial to make it orthogonal
+    end
+end
+
+
+
+
+
+% corrected and enhanced prompt code
+function C = orthpoly(N, a, b)
+    % Initialize the cell array to store polynomials
+    C = cell(N + 1, 1);
+    
+    % Initialize the first polynomial (constant)
+    C{1} = 1 / sqrt(b - a);
+    
+    for k = 1:N
+        % Initialize the polynomial to be orthogonalized
+        rho = 0;
+        for j = 0:k-1
+            % Get the polynomial from the previous basis set
+            base_poly = C{j + 1};
+            
+            % Calculate the projection coefficient
+            c = polyip([1, zeros(1, k)], base_poly, a, b);
+            
+            % Calculate the projection and subtract from the polynomial
+            rho = polyadd(rho, c * base_poly);
+        end
+        
+        % Create a polynomial of degree k
+        omega = polyadd([1, zeros(1, k)], -rho);
+        
+        % Normalize the polynomial to make it orthonormal
+        normalization_factor = sqrt(polyip(omega, omega, a, b));
+        C{k + 1} = omega / normalization_factor;
+    end
+end
+
+% Polynomial Integration (Helper Function)
+function ip = polyip(c, d, a, b)
+    % Compute the convolution of the two polynomial coefficient vectors
+    p = polyint(conv(c, d));
+    
+    % Evaluate the integral over the interval [a, b]
+    ip = diff(polyval(p, [a, b]));
+end
+
+% Polynomial Addition (Helper Function)
+function a = polyadd(c, d)
+    % Check if the length of c is less than d
+    if length(c) < length(d)
+        len = length(d) - length(c);
+        c = [zeros(1, len) c]; % Pad c with zeros at the beginning
+    elseif length(d) < length(c)
+        len = length(c) - length(d);
+        d = [zeros(1, len) d]; % Pad d with zeros at the beginning
+    end
+
+    % Add the two coefficient vectors
+    a = c + d;
+end
