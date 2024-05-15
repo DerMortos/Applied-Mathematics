@@ -1,44 +1,72 @@
 R = 2; % Radius in meters
-    theta = linspace(0, 2 * pi, 1000); % Parameterized angle
+theta = linspace(0, 2 * pi, 1000); % Parameterized angle
 
-    % Cycloid parameterization
-    x = R * (theta - sin(theta));
-    y = R * (cos(theta) - 1);
+% Cycloid parameterization
+x = R * (theta - sin(theta));
+y = R * (cos(theta) - 1);
 
-    % Plot the cycloidal arc
-    figure;
-    plot(x, y, 'b-', 'LineWidth', 2);
-    hold on;
-    xlabel('x (meters)');
-    ylabel('y (meters)');
-    title('Cycloidal Arc for the Frictionless Slide');
-    grid on;
-    axis equal;
+% Plot the cycloidal arc
+figure;
+plot(x, y, 'b-', 'LineWidth', 2);
+hold on;
+xlabel('x (meters)');
+ylabel('y (meters)');
+title('Cycloidal Arc for the Frictionless Slide');
+grid on;
+axis equal;
 
-    % Simulation parameters
-    g = 9.8; % Gravity (m/s^2)
-    Ntps = 100; % Improved Euler timesteps per second
-    t0 = 0; % Initial time
-    tf = 2; % Final time (in seconds)
-    Nt = ceil(Ntps * (tf - t0)); % Number of time steps
+% Simulation parameters
+g = 9.8; % Gravity (m/s^2)
+phi0 = [pi/6, 2*pi/6, 3*pi/6, 4*pi/6, 5*pi/6];  % Starting angles
+Ntps = 100; % Improved Euler timesteps per second
+t0 = 0; % Initial time
+tf = 2; % Final time (in seconds)
+%Nt = ceil(Ntps * (tf - t0)); % Number of time steps
+colors = ['r', 'g', 'b', 'm', 'c'];  % Colors for each ball
 
-    % Starting angles in radians (various positions)
-    starting_angles = linspace(pi/20, 19*pi/20, 19);
-    hang_times = zeros(size(starting_angles));
 
-    % Simulation for each starting angle
-    for i = 1:length(starting_angles)
-        phi_0 = starting_angles(i);
-        hang_times(i) = find_hang_time(R, phi_0, Ntps);
-    end
+% Calculate hang times for each starting angle
+hang_times = zeros(size(phi0));
+for i = 1:length(phi0)
+    hang_times(i) = find_hang_time(R, phi0(i), Ntps);
+end
+t_b = max(hang_times);  % Use the maximum hang time to define the period
 
-    % Plot time to reach the bottom from each starting angle
-    figure;
-    plot(starting_angles, hang_times, 'r.-', 'LineWidth', 2);
-    xlabel('Starting Angle (radians)');
-    ylabel('Hang Time (seconds)');
-    title('Time to Reach the Bottom of the Cycloidal Arc');
-    grid on;
+figure;
+hold on;
+axis equal;
+xlim([-4*R, 4*R]);
+ylim([-R, R]);
+title('Cycloid Slide Animation');
+xlabel('x');
+ylabel('y');
+
+theta = linspace(0, 2*pi, 1000);
+x_cycloid = R * (theta - sin(theta));
+y_cycloid = -R * (1 - cos(theta));
+plot(x_cycloid, y_cycloid, 'k', 'LineWidth', 2);  % Draw the cycloid path
+
+% Create plot handles for each ball
+balls = gobjects(1, length(phi0));
+for i = 1:length(phi0)
+    balls(i) = plot(NaN, NaN, 'o', 'MarkerFaceColor', colors(i), 'MarkerEdgeColor', 'k', 'MarkerSize', 10);
 end
 
-find_hang_time()
+% Animation loop
+t_final = 4 * t_b;  % Duration of the animation (4 periods)
+dt = 1 / Ntps;
+t = 0:dt:t_final;
+
+for k = 1:length(t)
+    for i = 1:length(phi0)
+        if t(k) <= hang_times(i)
+            % Calculate position along the cycloid
+            v = [phi0(i); 0];  % Initial conditions for each ball
+            [pos, ~] = improvedEuler(@(t, v) obj_func(t, R, phi0(i), Ntps), v, 0, t(k), 50);
+            x = R * (pos(1, end) - sin(pos(1, end)));
+            y = -R * (1 - cos(pos(1, end)));
+            set(balls(i), 'XData', x, 'YData', y);
+        end
+    end
+    drawnow;
+end
